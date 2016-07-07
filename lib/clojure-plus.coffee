@@ -10,6 +10,10 @@ module.exports =
       description: "Notify when refresh was done"
       type: "boolean"
       default: true
+    simpleRefresh:
+      description: "Refresh with a very simple code (that requires the current namespace)"
+      type: "boolean"
+      default: false
     refreshAfterConnect:
       description: "Refresh after REPL is connected"
       type: "boolean"
@@ -54,6 +58,10 @@ module.exports =
     atom.commands.add 'atom-text-editor', 'clojure-plus:clear-and-refresh-namespaces', =>
       @commands.runRefresh(true)
 
+    atom.commands.add 'atom-text-editor', 'clojure-plus:open-scratchpad', =>
+      te = new TextEditor();
+
+
     atom.commands.add 'atom-text-editor', 'clojure-plus:test-item', =>
       new SelectView([{label: "FOO"}, {label: "FAR"}])
 
@@ -61,8 +69,10 @@ module.exports =
       @markCustomExpr
         type: "watch"
         expression: "(do
-          (println 'swapping!)
-          (swap! user/__watches__ update-in [..ID..] #(conj (or % []) ..SEL..)) ..SEL..)"
+          (swap! user/__watches__ update-in [..ID..] #(conj (or % []) ..SEL..)) #nu/tapd ..SEL..)"
+        # expression: "(do
+        #   (println 'Result: ..SEL..)
+        #   (swap! user/__watches__ update-in [..ID..] #(conj (or % []) ..SEL..)) ..SEL..)"
         #expression: "(do (println ..SEL.. ) ..SEL..)"
 
     atom.workspace.observeTextEditors (editor) =>

@@ -11,12 +11,33 @@ module.exports = class CljCommands
   runRefresh: (all) ->
     before = atom.config.get('clojure-plus.beforeRefreshCmd')
     after = atom.config.get('clojure-plus.afterRefreshCmd')
+    simple = atom.config.get('clojure-plus.simpleRefresh')
 
+    protoRepl.executeCode before, ns: "user", displayInRepl: false unless simple && all
+    if simple
+      @runSimpleRefresh(all)
+    else
+      @runFullRefresh(all)
+    protoRepl.executeCode after, ns: "user", displayInRepl: false
+
+  runSimpleRefresh: (all) ->
+    return if all
+    notify = atom.config.get('clojure-plus.notify')
+    refreshCmd = "(require (.name *ns*) :reload)"
+    protoRepl.executeCodeInNs refreshCmd, displayInRepl: false, resultHandler: (result) =>
+      if result.value
+        atom.notifications.addSuccess("Refresh successful.") if notify
+        protoRepl.appendText("Refresh successful.")
+        @assignWatches()
+      else
+        atom.notifications.addError("Error refreshing.", detail: result.error) if notify
+        protoRepl.appendText("Error refreshing. CAUSE: #{result.error}\n")
+
+  runFullRefresh: (all) ->
     shouldRefreshAll = all || !@lastRefreshSucceeded
     refreshCmd = @getRefreshCmd(shouldRefreshAll)
 
     notify = atom.config.get('clojure-plus.notify')
-    protoRepl.executeCode before, ns: "user", displayInRepl: false
     protoRepl.executeCode refreshCmd, ns: "user", displayInRepl: false, resultHandler: (result) =>
       if result.value
         value = protoRepl.parseEdn(result.value)
@@ -35,9 +56,8 @@ module.exports = class CljCommands
       else if !shouldRefreshAll
         @runRefresh(true)
       else
-        atom.notifications.addError("Error refreshing.", detail: value.error) if notify
-        protoRepl.appendText("Error refreshing. CAUSE: #{value.error}\n")
-    protoRepl.executeCode after, ns: "user", displayInRepl: false
+        atom.notifications.addError("Error refreshing.", detail: result.error) if notify
+        protoRepl.appendText("Error refreshing. CAUSE: #{result.error}\n")
 
   getRefreshCmd: (all) ->
     key = if all then 'clojure-plus.refreshAllCmd' else 'clojure-plus.refreshCmd'
