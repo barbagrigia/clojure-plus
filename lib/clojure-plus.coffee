@@ -48,6 +48,29 @@ module.exports =
 
   everythingProvider: -> new EvryProvider()
 
+  # provideDeclarations: ->
+  #   grammarScopes: ['source.clojure']
+  #   getDeclarations: ({textEditor, visibleRange}) -> new Promise (resolve) ->
+  #     // Note: You can also return a Promise
+  #     return [
+  #       {
+  #         range: [[0, 0], [0, 4]],
+  #         source: {
+  #           filePath: '/tmp/test.txt',
+  #           position: [5, 0]
+  #         }
+  #       },
+  #       {
+  #         range: [[1, 0], [1, 4]],
+  #         source: {
+  #           filePath: '/tmp/test.txt'
+  #
+  #   cljCode = "
+  #   (for [ns-sym (map #(.key %) (all-ns))
+  #         sym (map first (ns-interns ns-sym))]
+  #     (str ns-sym \"/\" sym))"
+
+
   activate: (state) ->
     @commands = new CljCommands(@currentWatches)
 

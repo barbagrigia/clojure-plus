@@ -76,3 +76,10 @@
     (if-let [[_ & jar-data] (re-find #"file:(.+/\.m2/repository/(.+\.jar))!/(.+)" file-path)]
       (decompress-all temp-dir line jar-data)
       [(clojure.string/replace file-path #"/project/" "") line])))
+
+(defn symbols-from-ns [ns-ref]
+  (for [sym-name (map first (ns-interns ns-ref))
+        :let [ns-name (.name ns-ref)
+              fq-str (str "#'" ns-name "/" sym-name)
+              fqname (load-string fq-str)]]
+    {:var fq-str, :meta (select-keys (meta fqname) [:line :column])}))
