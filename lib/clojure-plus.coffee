@@ -48,32 +48,23 @@ module.exports =
 
   everythingProvider: -> new EvryProvider()
 
-  # provideDeclarations: ->
-  #   grammarScopes: ['source.clojure']
-  #   getDeclarations: ({textEditor, visibleRange}) -> new Promise (resolve) ->
-  #     // Note: You can also return a Promise
-  #     return [
-  #       {
-  #         range: [[0, 0], [0, 4]],
-  #         source: {
-  #           filePath: '/tmp/test.txt',
-  #           position: [5, 0]
-  #         }
-  #       },
-  #       {
-  #         range: [[1, 0], [1, 4]],
-  #         source: {
-  #           filePath: '/tmp/test.txt'
-  #
-  #   cljCode = "
-  #   (for [ns-sym (map #(.key %) (all-ns))
-  #         sym (map first (ns-interns ns-sym))]
-  #     (str ns-sym \"/\" sym))"
+  provideDeclarations: ->
+    console.log "Is it working?"
+    # grammarScopes: ["source.clojure"]
+    {
+      grammarScopes: ["*"]
+      getDeclarations: ({textEditor}) =>
+        console.log "Asking for declarations of ", textEditor
+        file = textEditor.getPath()
+        @commands.getSymbolsInEditor(textEditor).then (symbols) =>
+          symbols.map (symData) =>
+            {line,column,symbol} = symData
 
+            range: [[line, column],[line,column + symbol.length]]
+            source: file
+    }
 
   activate: (state) ->
-    @commands = new CljCommands(@currentWatches)
-
     atom.commands.add 'atom-text-editor', 'clojure-plus:refresh-namespaces', =>
       @commands.runRefresh()
     atom.commands.add 'atom-text-editor', 'clojure-plus:goto-var-definition', =>
@@ -105,6 +96,8 @@ module.exports =
 
     atom.packages.onDidActivatePackage (pack) =>
       if pack.name == 'proto-repl'
+        @commands = new CljCommands(@currentWatches, protoRepl)
+
         protoRepl.onDidConnect =>
           @commands.prepare()
 
